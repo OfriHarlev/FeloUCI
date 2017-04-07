@@ -1116,8 +1116,8 @@ def calculate_felo_ratings(parameters, fencers, bouts, plot=False, estimate_fres
             # the parameters section; *and* the Felo ratings must not be older
             # than the maximal days in the plot.
             if plot and (i == len(bouts) - 1 or bouts[i + 1].date.toordinal() != current_bout_daynumber) and \
-                            bout.date_string[:10] >= parameters["earliest date in plot"] and \
-                                    current_daynumber - current_bout_daynumber <= parameters["maximal days in plot"]:
+                bout.date_string[:10] >= parameters["earliest date in plot"] and \
+                    current_daynumber - current_bout_daynumber <= parameters["maximal days in plot"]:
                 data_file.write(str(current_bout_daynumber))
                 if current_bout_daynumber - last_xtics_daynumber >= parameters["min distance of plot tics"]:
                     # Generate tic marks not too densely; labels must be at
@@ -1350,14 +1350,8 @@ There is NO WARRANTY, to the extent permitted by law."""))
                 if i >= 1: print(file=output_file)
                 print(parameters["groupname"] + ":", file=output_file)
             for fencer in resultslist:
-<<<<<<< HEAD
-                print>>output_file, "    " + fencer.name + (19-len(fencer.name))*" " + "\t" + \
-                    str(fencer.felo_rating)
-    except Error, e:
-        print>>sys.stderr, "felo_rating:", e.description
-=======
-                print("    " + fencer.name + (19 - len(fencer.name)) * " " + "\t" + str(fencer.felo_rating),
+                print("    " + fencer.name + (19-len(fencer.name))*" " + "\t" + str(fencer.felo_rating),
                       file=output_file)
+
     except Error as e:
         print("felo_rating:", e.description, file=sys.stderr)
->>>>>>> origin/Felo-Library-Integration

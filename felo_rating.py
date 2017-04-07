@@ -920,6 +920,7 @@ def adopt_preliminary_felo_ratings():
         fencer.total_weighting = fencer.total_weighting_preliminary
     Fencer.fencers_with_preliminary_felo_rating.clear()
 
+
 class Fencer(object):
     """Class for fencer data.  Basically, it is a mere container for the
     attributes.
@@ -927,10 +928,11 @@ class Fencer(object):
     :cvar fencers_with_preliminary_felo_rating: all fencers which still have
       their Felo number in felo_rating_preliminary, so that it must be copied to
       felo_rating is a bout day is completely processed.
-    
+
     :type fencers_with_preliminary_felo_rating: set
     """
     fencers_with_preliminary_felo_rating = set()
+
     def __init__(self, name, felo_rating, parameters, initial_total_weighting=0):
         """Class constructor.
 
@@ -969,6 +971,7 @@ class Fencer(object):
             self.total_felo_rating_opponents = 0.0
             self.initial_felo_rating = 0
             self.total_result = 0.0
+
     def __get_felo_rating_exact(self):
         if not self.freshman:
             return self.__felo_rating
@@ -977,40 +980,49 @@ class Fencer(object):
             # see http://www.chess.at/bundesspielleitung/OESB/oesb_tuwo_06.pdf
             # section 5.1 on page 43.
             if self.total_weighting < self.parameters["5 point bouts for estimate"] or \
-                    self.total_weighting == 0:
+                            self.total_weighting == 0:
                 return 0.0
             A = self.total_result / self.total_weighting
             B = self.total_weighting / (self.total_weighting + 2)
             average_felo_rating_opponents = self.total_felo_rating_opponents / self.total_weighting
             return average_felo_rating_opponents + (A * B * 700)
+
     def __get_felo_rating(self):
         return int(round(self.felo_rating_exact))
+
     def __set_felo_rating(self, felo_rating):
         if not self.freshman and not self.foreign_fencer:
             self.__felo_rating = max(felo_rating, self.parameters["minimal felo rating"])
             if self.__felo_rating >= self.parameters["felo rating top fencers"]:
                 self.__k_factor = self.parameters["k factor top fencers"]
+
     felo_rating_exact = property(__get_felo_rating_exact, __set_felo_rating,
                                  doc="""Felo rating with decimal fraction.
                                         @type: float""")
     felo_rating = property(__get_felo_rating, __set_felo_rating,
                            doc="""Felo rating, rounded to integer.
                                   @type: int""")
+
     def __get_k_factor(self):
         if self.total_weighting < self.parameters["5 point bouts freshmen"]:
             return self.parameters["k factor freshmen"]
         return self.__k_factor
+
     k_factor = property(__get_k_factor, doc="""k factor (see Elo formula) of this fencer.
                                                @type: int""")
+
     def __cmp__(self, other):
         """Sort by Felo rating, descending."""
-        return -cmp(self.felo_rating_exact, other.felo_rating_exact)
+        return -(self.felo_rating_exact - other.felo_rating_exact)
+
     def __repr__(self):
         """No formal representation available yet, thus I call __str__()."""
         return self.__str__()
+
     def __str__(self):
         """Informal string representation of the fencer."""
-        return self.name + " (" + unicode(self.felo_rating) + ")"
+        return self.name + " (" + str(self.felo_rating) + ")"
+
 
 def calculate_felo_ratings(parameters, fencers, bouts, plot=False, estimate_freshmen=False,
                            bootstrapping=False, maxcycles=1000, bootstrapping_callback=None):
@@ -1055,6 +1067,7 @@ def calculate_felo_ratings(parameters, fencers, bouts, plot=False, estimate_fres
       - `BootstrappingError`: if the bootstrapping didn't converge
       - `ExternalProgramError`: if an external program is not found
     """
+
     def calculate_felo_ratings_core(parameters, fencers, bouts, plot, data_file_name=None):
         """Calculate the new Felo ratings, taking a whole bunch of bouts into
         account.  If wanted, generate plots with the development of the Felo
@@ -1089,7 +1102,7 @@ def calculate_felo_ratings(parameters, fencers, bouts, plot=False, estimate_fres
             last_xtics_daynumber = 0
         for i, bout in enumerate(bouts):
             set_preliminary_felo_ratings(fencers, bout, parameters)
-            if i == len(bouts) - 1 or bout.date_string != bouts[i+1].date_string:
+            if i == len(bouts) - 1 or bout.date_string != bouts[i + 1].date_string:
                 # Not one *day* is over but one set of bouts which took place with
                 # unknown order.
                 adopt_preliminary_felo_ratings()
@@ -1102,9 +1115,9 @@ def calculate_felo_ratings(parameters, fencers, bouts, plot=False, estimate_fres
             # anyway); the Felo ratings must be after the minimal date given in
             # the parameters section; *and* the Felo ratings must not be older
             # than the maximal days in the plot.
-            if plot and (i == len(bouts) - 1 or bouts[i+1].date.toordinal() != current_bout_daynumber) and \
-                    bout.date_string[:10] >= parameters["earliest date in plot"] and \
-                    current_daynumber - current_bout_daynumber <= parameters["maximal days in plot"]:
+            if plot and (i == len(bouts) - 1 or bouts[i + 1].date.toordinal() != current_bout_daynumber) and \
+                            bout.date_string[:10] >= parameters["earliest date in plot"] and \
+                                    current_daynumber - current_bout_daynumber <= parameters["maximal days in plot"]:
                 data_file.write(str(current_bout_daynumber))
                 if current_bout_daynumber - last_xtics_daynumber >= parameters["min distance of plot tics"]:
                     # Generate tic marks not too densely; labels must be at
@@ -1117,6 +1130,7 @@ def calculate_felo_ratings(parameters, fencers, bouts, plot=False, estimate_fres
         if plot:
             data_file.close()
             return xtics
+
     def construct_supplement(path):
         """Builds a message with the path where felo_rating.py looked for an
         external program but didn't find it.
@@ -1154,7 +1168,7 @@ def calculate_felo_ratings(parameters, fencers, bouts, plot=False, estimate_fres
     if bootstrapping:
         for i in range(maxcycles):
             if i % 10 == 0 and bootstrapping_callback:
-                bootstrapping_callback(float(i)/(maxcycles-1))
+                bootstrapping_callback(float(i) / (maxcycles - 1))
             for fencer in fencers.values():
                 fencer.old_felo_rating = fencer.felo_rating_exact
             calculate_felo_ratings_core(parameters, fencers, bouts, plot=False)
@@ -1166,15 +1180,16 @@ def calculate_felo_ratings(parameters, fencers, bouts, plot=False, estimate_fres
         if i == maxcycles - 1:
             raise BootstrappingError(_("The bootstrapping didn't converge."))
     xtics = calculate_felo_ratings_core(parameters, fencers, bouts, plot, data_file_name)
-    visible_fencers.sort()    # Descending by Felo rating
+    visible_fencers.sort()  # Descending by Felo rating
     if plot:
         # Call Gnuplot, convert, and ps2pdf to generate the PNG and PDF plots.
         # Note: We don't generate HTML tables here.  These must be provided
         # separately.
         gnuplot_script = codecs.open(gnuplot_script_file_name, "w", encoding="utf-8")
         gnuplot_script.write(u"set term postscript color; set output '" + postscript_file_name + "';"
-                             u"set key outside; set xtics rotate; set grid xtics;"
-                             u"set xtics nomirror (%s);" % xtics[:-1] +
+                                                                                                 u"set key outside; set xtics rotate; set grid xtics;"
+                                                                                                 u"set xtics nomirror (%s);" % xtics[
+                                                                                                                               :-1] +
                              u"plot ")
         for i, fencer in enumerate(visible_fencers):
             gnuplot_script.write(u"'%s' using 1:%d with lines lw 5 title '%s'" %
@@ -1207,6 +1222,7 @@ def calculate_felo_ratings(parameters, fencers, bouts, plot=False, estimate_fres
         return [fencer for fencer in fencers.values() if fencer.freshman]
     return visible_fencers
 
+
 def expectation_value(first_fencer, second_fencer):
     """Returns the expected winning value of the first given fencer in a bout
     with the second.  The winning value is actually the fraction of won single
@@ -1226,7 +1242,8 @@ def expectation_value(first_fencer, second_fencer):
 
     :rtype: float
     """
-    return 1 / (1 + 10**((second_fencer.felo_rating_exact - first_fencer.felo_rating_exact)/400.0))
+    return 1 / (1 + 10 ** ((second_fencer.felo_rating_exact - first_fencer.felo_rating_exact) / 400.0))
+
 
 def prognosticate_bout(first_fencer, second_fencer, fenced_to):
     """Estimates the most probable result of a bout.
@@ -1251,11 +1268,11 @@ def prognosticate_bout(first_fencer, second_fencer, fenced_to):
     expectation_first = expectation_value(first_fencer, second_fencer)
     if expectation_first > 0.5:
         points_first = fenced_to
-        points_second = int(round(fenced_to * (1/expectation_first - 1)))
+        points_second = int(round(fenced_to * (1 / expectation_first - 1)))
     else:
-        points_first = int(round(fenced_to / (1/expectation_first - 1)))
+        points_first = int(round(fenced_to / (1 / expectation_first - 1)))
         points_second = fenced_to
-    for line in file(datapath+"/auf%d.dat" % fenced_to):
+    for line in open(datapath + "/auf%d.dat" % fenced_to, 'r'):
         if line[0] != "#":
             result_first, winning_chance_first, __ = line.split()
             result_first, winning_chance_first = float(result_first), float(winning_chance_first)
@@ -1268,6 +1285,7 @@ def prognosticate_bout(first_fencer, second_fencer, fenced_to):
             points_first -= 1
     return points_first, points_second, int(round(winning_chance_first * 100))
 
+
 if __name__ == '__main__':
     """If called as a program, it interprets the command line parameters and
     calculates the resulting Felo rankings for each given Felo file.  It prints
@@ -1275,6 +1293,7 @@ if __name__ == '__main__':
     simple way to calculate numbers, and it may be enough for many purposes.
     """
     import sys, optparse
+
     option_parser = optparse.OptionParser()
     option_parser.add_option("-p", "--plots", action="store_true", dest="plots",
                              help=_(u"Generate plots with the Felo ratings"), default=False)
@@ -1299,14 +1318,14 @@ if __name__ == '__main__':
     options, felo_filenames = option_parser.parse_args()
 
     if options.version:
-        print "Felo ratings " + distribution_version + _(u", revision %s") % __version__[11:-2]
-        print
-        print _(u"Copyright %s 2006 Torsten Bronger, Aachen, Germany") % u"©"
-        print _(u"""This is free software.  You may redistribute copies of it under the terms of
+        print("Felo ratings " + distribution_version + _(u", revision %s") % __version__[11:-2])
+        print()
+        print((u"Copyright %s 2006 Torsten Bronger, Aachen, Germany") % u"©")
+        print((u"""This is free software.  You may redistribute copies of it under the terms of
 the MIT License <http://www.opensource.org/licenses/mit-license.php>.
-There is NO WARRANTY, to the extent permitted by law.""")
-        print
-        print _(u"Written by Torsten Bronger <bronger@physik.rwth-aachen.de>.")
+There is NO WARRANTY, to the extent permitted by law."""))
+        print()
+        print((u"Written by Torsten Bronger <bronger@physik.rwth-aachen.de>."))
         sys.exit()
     try:
         if options.estimate_freshmen and options.bootstrap:
@@ -1328,10 +1347,10 @@ There is NO WARRANTY, to the extent permitted by law.""")
                         fencer.initial_felo_rating = fencer.felo_rating
                 write_back_fencers_to_file(felo_filename, fencers)
             if len(felo_filenames) > 1:
-                if i >= 1: print>>output_file
-                print>>output_file, parameters["groupname"] + ":"
+                if i >= 1: print(file=output_file)
+                print(parameters["groupname"] + ":", file=output_file)
             for fencer in resultslist:
-                print>>output_file, "    " + fencer.name + (19-len(fencer.name))*" " + "\t" + \
-                    unicode(fencer.felo_rating)
-    except Error, e:
-        print>>sys.stderr, "felo_rating:", e.description
+                print("    " + fencer.name + (19 - len(fencer.name)) * " " + "\t" + str(fencer.felo_rating),
+                      file=output_file)
+    except Error as e:
+        print("felo_rating:", e.description, file=sys.stderr)

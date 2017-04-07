@@ -196,10 +196,10 @@ class Bout(object):
         """If bouts are sorted with "sort()", they are sorted by their date,
         with early bouts first.
         """
-        if cmp(self.date, other.date):
-            return cmp(self.date, other.date)
+        if self.date == other.date:
+            return (self.date - other.date).total_seconds()
         else:
-            return cmp(self.index, other.index)
+            return self.index - other.index
     def __get_date_string(self):
         result = self.date.isoformat()
         if self.index != 0:
@@ -658,7 +658,7 @@ def parse_felo_file(felo_file):
     fencers = {}
     for name, initial_felo_rating in initial_felo_ratings.items():
         initial_total_weighting = 0.0
-        if isinstance(initial_felo_rating, basestring):
+        if isinstance(initial_felo_rating, str):
             try:
                 # An initial total weighting is also available, in parenthesis
                 position_opening_parenthesis = initial_felo_rating.index("(")
@@ -707,11 +707,11 @@ def write_felo_file(filename, parameters, fencers, bouts):
     :type bouts: list
     """
     felo_file = codecs.open(filename, "w", "utf-8")
-    print>>felo_file, _("# Parameters")
+    print(_("# Parameters"), file=felo_file)
     print>>felo_file
     parameterslist = parameters.items()
     # sort case-insensitively
-    parameterslist.sort(lambda x,y: cmp(x[0].upper(),y[0].upper()))
+    parameterslist.sort(lambda x,y: x[0].upper() < y[0].upper())
     for name, value in parameterslist:
         print>>felo_file, fill_with_tabs(name, 4) + str(value)
     print>>felo_file
@@ -835,7 +835,7 @@ class Error(Exception):
         :type description: string
         """
         self.description = description
-        if isinstance(description, unicode):
+        if isinstance(description, str):
             # FixMe: The following must be made OS-dependent
             description = description.encode("utf-8")
         Exception.__init__(self, description)
@@ -861,7 +861,7 @@ class LineError(Error):
         if filename:
             supplement = filename
             if linenumber:
-                supplement += _(u", line ") + unicode(linenumber)
+                supplement += _(u", line ") + str(linenumber)
             description = supplement  + ": " + description
         Error.__init__(self, description)
 
@@ -1332,6 +1332,6 @@ There is NO WARRANTY, to the extent permitted by law.""")
                 print>>output_file, parameters["groupname"] + ":"
             for fencer in resultslist:
                 print>>output_file, "    " + fencer.name + (19-len(fencer.name))*" " + "\t" + \
-                    unicode(fencer.felo_rating)
+                    str(fencer.felo_rating)
     except Error, e:
         print>>sys.stderr, "felo_rating:", e.description
